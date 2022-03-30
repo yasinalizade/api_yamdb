@@ -4,6 +4,7 @@ from .validators import validate_score
 
 
 class Category(models.Model):
+    """Модель - отзывы."""
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -12,6 +13,7 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """Модель - жанры."""
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -20,6 +22,7 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """Модель - проивзедения."""
     name = models.CharField(max_length=256)
     year = models.IntegerField()
     rating = models.PositiveIntegerField(blank=True)
@@ -28,7 +31,8 @@ class Title(models.Model):
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
-        related_name='titles'
+        related_name='titles',
+        null=True
     )
 
     def __str__(self):
