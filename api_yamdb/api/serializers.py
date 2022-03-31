@@ -6,19 +6,23 @@ from reviews.models import Category, Comment, Genre, Review, Title
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        # fields = '__all__'
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        # fields = '__all__'
+        fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(read_only=True, many=True)
+    category = CategorySerializer(read_only=True)
+
     class Meta:
         model = Title
-        # fields = '__all__'
+        fields = ('id', 'name', 'year', 'description',
+                  'genre', 'category')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
