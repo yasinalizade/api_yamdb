@@ -141,4 +141,4 @@ class User(AbstractUser):
     #  REQUIRED_FIELD = ['confirmation_code']
 
     def __str__(self):
-        return self.email
+        return f'{self.email}: {self.first_name}'
