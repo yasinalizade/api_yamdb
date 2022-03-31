@@ -1,6 +1,5 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-from .validators import validate_score
 
 
 class Category(models.Model):
@@ -46,13 +45,20 @@ class Review(models.Model):
     # Здесь будет author
     score = models.IntegerField(
         'Поставьте оценку от 1 до 10',
-        validators=[validate_score],
+        # default=1, Не уверен, нужно ли дефолтное значение
+        validators=[
+            MaxValueValidator(10),
+            MinValueValidator(1)
+        ]
     )
     pub_date = models.DateField('Дата публикации', auto_now_add=True)
 
+    def __str__(self) -> str:
+        return f'{self.title}: {self.score}'
+
 
 class Comment(models.Model):
-    """Модель - коммантирии."""
+    """Модель - комментарии."""
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
@@ -66,3 +72,6 @@ class Comment(models.Model):
     text = models.TextField
     # Здесь будет author
     pub_date = models.DateField('Дата публикации', auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f'{self.text[:20]}'
