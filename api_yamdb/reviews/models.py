@@ -26,7 +26,6 @@ class Title(models.Model):
     """Модель - проивзедения."""
     name = models.CharField(max_length=256)
     year = models.IntegerField()
-    rating = models.PositiveIntegerField(blank=True)
     description = models.TextField(blank=True)
     genre = models.ManyToManyField(Genre, related_name='titles')
     category = models.ForeignKey(
@@ -81,6 +80,7 @@ class Comment(models.Model):
 
     def __str__(self) -> str:
         return f'{self.text[:20]}'
+
 
 class User(AbstractUser):
     USER = 1
