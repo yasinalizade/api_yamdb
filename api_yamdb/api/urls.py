@@ -1,6 +1,9 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+
+from .views import CommentViewSet, ReviewViewSet
+# временно, чтобы запускался сервер
 # from .views import CategoryViewSet, CommentViewSet, GenreViewSet
 # from .views import ReviewViewSet, TitleViewsSet
 
@@ -9,12 +12,12 @@ router = DefaultRouter()
 
 router.register(
     r'titles/(?P<title_id>\d+)/reviews',
-    # ReviewViewSet, ДОБАВИТЬ ПОСЛЕ ОПРЕДЕЛЕНИЯ ВЬЮСЕТА
+    ReviewViewSet,
     basename='review'
 )
 router.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
-    # CommentViewSet, ДОБАВИТЬ ПОСЛЕ ОПРЕДЕЛЕНИЯ ВЬЮСЕТА
+    CommentViewSet,
     basename='comment'
 )
 
