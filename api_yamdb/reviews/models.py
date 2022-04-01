@@ -2,27 +2,22 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from enum import Enum
+
+
+class UserChoice(Enum):
+    ROLE_CHOICES = (
+        ('USER', 'user'),
+        ('MODERATOR', 'moderator'),
+        ('ADMIN', 'admin'),
+    )
 
 
 class User(AbstractUser):
-    USER = 1
-    MODERATOR = 2
-    ADMIN = 3
-
-    ROLE_CHOICES = (
-        (USER, 'User'),
-        (MODERATOR, 'Moderator'),
-        (ADMIN, 'Admin'),
-    )
-
-    # role = models.PositiveSmallIntegerField(
-    #   choices=ROLE_CHOICES, blank=True, null=False
-    # )
-    #  role = models.CharField(choices=ROLE_CHOICES, blank=True, null=False)
-    role = models.CharField(choices=ROLE_CHOICES, max_length=10)
+    """Модель - пользователи."""
     username_validator = UnicodeUsernameValidator()
     username = models.CharField(
-        'Username',
+        'Логин',
         max_length=150,
         unique=True,
         blank=False,
@@ -43,22 +38,26 @@ class User(AbstractUser):
     first_name = models.CharField(
         'Имя',
         max_length=150,
-        blank=False
+        blank=True
     )
     last_name = models.CharField(
         'Фамилия',
         max_length=150,
-        blank=False
-    )
-    confirmation_code = models.CharField(max_length=6)
-    role = models.CharField(
-        'Роль',
-        max_length=30,
         blank=True
     )
+    # confirmation_code = models.CharField(max_length=6)
+    # Если я не ошибаюсь, он должен быть в сериализаторе
     bio = models.TextField(
         'Биография',
         blank=True
+    )
+    role = models.CharField(
+        'Роль',
+        max_length=20,
+        choices=[(tag.name, tag.value) for tag in UserChoice],
+        default='USER',
+        blank=True,
+        null=False
     )
 
     #  USERNAME_FIELD = 'email'
