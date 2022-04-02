@@ -1,73 +1,7 @@
-from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from enum import Enum
 
-
-class UserChoice(Enum):
-    ROLE_CHOICES = (
-        ('USER', 'user'),
-        ('MODERATOR', 'moderator'),
-        ('ADMIN', 'admin'),
-    )
-
-
-class User(AbstractUser):
-    """Модель - пользователи."""
-    username_validator = UnicodeUsernameValidator()
-    username = models.CharField(
-        'Пользователь',
-        max_length=150,
-        unique=True,
-        blank=False,
-        null=False,
-        help_text=('Обязательное поле. Только буквы и цифры. До 150 символов'),
-        validators=[username_validator],
-        error_messages={
-            'unique': ('Пользователь с таким именем уже зарегистрирован.')
-        },
-    )
-    email = models.EmailField(
-        'Электронная почта',
-        max_length=254,
-        blank=False,
-        unique=True,
-        null=False
-    )
-    first_name = models.CharField(
-        'Имя',
-        max_length=150,
-        blank=True
-    )
-    last_name = models.CharField(
-        'Фамилия',
-        max_length=150,
-        blank=True
-    )
-    # confirmation_code = models.CharField(max_length=6)
-    # Если я не ошибаюсь, он должен быть в сериализаторе
-    bio = models.TextField(
-        'Биография',
-        blank=True
-    )
-    role = models.CharField(
-        'Роль',
-        max_length=20,
-        choices=[(tag.name, tag.value) for tag in UserChoice],
-        default='USER',
-        blank=True,
-    )
-
-    #  USERNAME_FIELD = 'email'
-    #  REQUIRED_FIELD = ['confirmation_code']
-
-    class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
-
-    def __str__(self):
-        return self.email
+from users.models import User
 
 
 class Category(models.Model):
@@ -144,11 +78,11 @@ class Review(models.Model):
     )
     score = models.IntegerField(
         'Поставьте оценку от 1 до 10',
-        # default=1, Не уверен, нужно ли дефолтное значение
         validators=[
             MaxValueValidator(10),
             MinValueValidator(1)
-        ]
+        ],
+        blank=False
     )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 

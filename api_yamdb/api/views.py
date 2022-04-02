@@ -1,10 +1,11 @@
 from django.shortcuts import get_object_or_404
+
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 
 from reviews.models import Category, Comment, Genre, Review, Title
-from .serializers import CategorySerializer, CommentSerializer
-from .serializers import GenreSerializer, ReviewSerializer, TitleSerializer
+from .serializers import CategorySerializer, CommentSerializer, GenreSerializer
+from .serializers import ReviewSerializer, TitleSerializer
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
