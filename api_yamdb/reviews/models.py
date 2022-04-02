@@ -142,6 +142,12 @@ class Review(models.Model):
     pub_date = models.DateField('Дата публикации', auto_now_add=True)
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review',
+            )
+        ]
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
 

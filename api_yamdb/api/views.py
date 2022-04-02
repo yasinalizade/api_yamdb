@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
 
 from reviews.models import Category, Comment, Genre, Review, Title
 from .serializers import CategorySerializer, CommentSerializer
@@ -23,6 +24,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self, *args, **kwargs):
         queryset = Review.objects.all()
