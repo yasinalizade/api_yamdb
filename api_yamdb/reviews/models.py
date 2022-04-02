@@ -17,7 +17,7 @@ class User(AbstractUser):
     """Модель - пользователи."""
     username_validator = UnicodeUsernameValidator()
     username = models.CharField(
-        'Логин',
+        'Пользователь',
         max_length=150,
         unique=True,
         blank=False,
@@ -57,7 +57,6 @@ class User(AbstractUser):
         choices=[(tag.name, tag.value) for tag in UserChoice],
         default='USER',
         blank=True,
-        null=False
     )
 
     #  USERNAME_FIELD = 'email'
@@ -118,6 +117,18 @@ class Title(models.Model):
         return self.name
 
 
+class Genre_Title(models.Model):
+    """Модель - ключи жанры-произведения."""
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE,
+        related_name='genre_title',)
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name='genre_title',)
+
+
 class Review(models.Model):
     """Модель - отзывы."""
     title = models.ForeignKey(
@@ -125,7 +136,7 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    text = models.TextField
+    text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -139,7 +150,7 @@ class Review(models.Model):
             MinValueValidator(1)
         ]
     )
-    pub_date = models.DateField('Дата публикации', auto_now_add=True)
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
         constraints = [
@@ -162,18 +173,13 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        related_name='comments'
-    )
-    text = models.TextField
+    text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    pub_date = models.DateField('Дата публикации', auto_now_add=True)
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Комментарий'
