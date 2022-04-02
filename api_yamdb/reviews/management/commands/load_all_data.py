@@ -49,25 +49,27 @@ class Command(BaseCommand):
                 title_id=row['title_id'],
             )
             genre_title.save()
-            for row in DictReader(open(
-                    './static/data/review.csv', encoding='utf-8')):
-                review = Review(
-                    id=row['id'],
-                    title_id=row['title_id'],
-                    text=row['text'],
-                    author_id=row['author'],
-                    score=row['score'],
-                    pub_date=row['pub_date']
-                )
-                review.save()
-            for row in DictReader(open(
-                    './static/data/comments.csv', encoding='utf-8')):
-                comment = Comment(
-                    id=row['id'],
-                    review_id=row['review_id'],
-                    text=row['text'],
-                    author_id=row['author'],
-                    pub_date=row['pub_date']
-                )
-                comment.save()
+
+        for row in DictReader(open(
+                './static/data/review.csv', encoding='utf-8')):
+            review = Review(
+                id=row['id'],
+                title_id=row['title_id'],
+                text=row['text'],
+                author_id=row['author'],
+                score=row['score'],
+                pub_date=row['pub_date']
+            )
+            review.save()
+
+        for row in DictReader(open(
+                './static/data/comments.csv', encoding='utf-8')):
+            comment = Comment(
+                id=row['id'],
+                review_id=row['review_id'],
+                text=row['text'],
+                author_id=row['author'],
+                pub_date=row['pub_date']
+            )
+            comment.save()
         print('...done')

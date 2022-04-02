@@ -6,8 +6,8 @@ from rest_framework.permissions import AllowAny
 
 from reviews.models import Category, Comment, Genre, Review, Title
 from .filters import TitleFilter
-from .serializers import CategorySerializer, CommentSerializer
-from .serializers import (GenreSerializer, ReviewSerializer,
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer,
                           TitleReadSerializer, TitleWriteSerializer)
 
 
