@@ -6,7 +6,7 @@ from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
 
-class SignupSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'email')
@@ -96,8 +96,30 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'pub_date')
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio', 'role')
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'role', 'bio'
+        )
+
+
+class NotAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name','last_name', 'role', 'bio'
+        )
+        read_only_fields = ('role',)
+
+
+class GetTokenSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=True)
+    confirmation_code = serializers.CharField(
+        required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code')

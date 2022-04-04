@@ -1,29 +1,30 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.validators import UnicodeUsernameValidator
+# from django.contrib.auth.tokens import default_token_generator
 from django.db import models
-from enum import Enum
+# from django.db.models.signals import post_save
 
+from .validators import validate_username
 
-class UserChoice(Enum):
-    ROLE_CHOICES = (
-        ('user', 'user'),
-        ('moderator', 'moderator'),
-        ('admin', 'admin'),
-    )
+USER = 'user'
+ADMIN = 'admin'
+MODERATOR = 'moderator'
 
+ROLE_CHOICES = [
+    (USER, USER),
+    (ADMIN, ADMIN),
+    (MODERATOR, MODERATOR),
+]
 
 class User(AbstractUser):
     """Модель - пользователи."""
-    password = models.CharField(max_length=1, blank=True, null=True)
-    username_validator = UnicodeUsernameValidator()
     username = models.CharField(
         'Пользователь',
+        validators=(validate_username,),
         max_length=150,
         unique=True,
         blank=False,
         null=False,
         help_text=('Обязательное поле. Только буквы и цифры. До 150 символов'),
-        validators=[username_validator],
         error_messages={
             'unique': ('Пользователь с таким именем уже зарегистрирован.')
         },
@@ -52,18 +53,35 @@ class User(AbstractUser):
     role = models.CharField(
         'Роль',
         max_length=20,
-        choices=[(tag.name, tag.value) for tag in UserChoice],
-        default='user',
-        blank=True,
+        choices=ROLE_CHOICES,
+        default=USER,
+        blank=True
     )
-    is_active = models.BooleanField(default=True)
-    is_admin = models.BooleanField(default=False)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+  
+    confirmation_code = models.CharField(
+        'Код подтверждения',
+        max_length=255,
+        null=True,
+        blank=False,
+        default='[][][][][]'
+    )
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
 
     class Meta:
+        ordering = ('id',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
     def __str__(self):
-        return self.email
+        return self.username

@@ -17,6 +17,21 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           TitleReadSerializer, TitleWriteSerializer,
                           UserSerializer)
 
+from django.core.mail import EmailMessage
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from .permissions import AdminOnly
+from reviews.models import User
+
+from .serializers import (GetTokenSerializer,
+                          NotAdminSerializer,
+                          SignUpSerializer, UsersSerializer)
+
+from rest_framework import permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
 
 class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
@@ -104,3 +119,4 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

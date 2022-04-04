@@ -1,12 +1,15 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-
+# from rest_framework.routers import SimpleRouter
 
 from .views import (CategoryViewSet, CommentViewSet, GenreViewSet,
                     ReviewViewSet, TitleViewSet, UserViewSet)
-from users.views import send_confirmation_code
+# from users.views import send_confirmation_code
+from users.views import (APIGetToken, APISignup, UsersViewSet)
+
 
 router = DefaultRouter()
+# router = SimpleRouter()
 
 router.register(
     'categories',
@@ -39,7 +42,13 @@ router.register(
     basename='user'
 )
 
+router.register(
+    'users',
+    UsersViewSet,
+    basename='users'
+)
 urlpatterns = [
-    path('v1/', include(router.urls), name='api_v1'),
-    path('v1/auth/signup/', send_confirmation_code, name='api_registration')
+    path('v1/auth/token/', APIGetToken.as_view(), name='get_token'),
+    path('v1/', include(router.urls)),
+    path('v1/auth/signup/', APISignup.as_view(), name='signup'),
 ]
