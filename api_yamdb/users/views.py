@@ -1,25 +1,118 @@
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
+from rest_framework import viewsets
+from rest_framework.filters import SearchFilter
 
-from rest_framework.decorators import api_view
+from django.core.mail import EmailMessage
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from api.permissions import AdminOnly
+from reviews.models import User
+
+from api.serializers import (
+    GetTokenSerializer,
+    NotAdminSerializer,
+    SignUpSerializer,
+    UsersSerializer
+)
+
+from rest_framework import permissions, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
-
-from .models import User
-from api.serializers import SignupSerializer
+from rest_framework.permissions import IsAuthenticated
 
 
-@api_view(["POST"])
-def send_confirmation_code(request):
-    if request.method == "POST":
-        serializer = SignupSerializer(data=request.data)
+class UsersViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UsersSerializer
+    permission_classes = (IsAuthenticated, AdminOnly,)
+    lookup_field = 'username'
+    filter_backends = (SearchFilter, )
+    search_fields = ('username', )
+
+    @action(
+        methods=['GET', 'PATCH'],
+        detail=False,
+        permission_classes=(IsAuthenticated,),
+        url_path='me')
+    def get_current_user_info(self, request):
+        serializer = UsersSerializer(request.user)
+        if request.method == 'PATCH':
+            if request.user.is_admin:
+                serializer = UsersSerializer(
+                    request.user,
+                    data=request.data,
+                    partial=True)
+            else:
+                serializer = NotAdminSerializer(
+                    request.user,
+                    data=request.data,
+                    partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
+
+
+class APIGetToken(APIView):
+    """
+    Получение JWT-токена в обмен на username и confirmation code.
+    Права доступа: Доступно без токена. Пример тела запроса:
+    {
+        "username": "string",
+        "confirmation_code": "string"
+    }
+    """
+    def post(self, request):
+        serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data.get('email')
-        user, _ = User.objects.get_or_create(email=email)
-        token = default_token_generator.make_token(user)
-        send_mail(
-            subject="Your confirmation code is inside!",
-            message=f"Please use this code: {str(token)} to login and use API",
-            from_email="support@yamdb.com",
-            recipient_list=[email],
+        data = serializer.validated_data
+        try:
+            user = User.objects.get(username=data['username'])
+        except User.DoesNotExist:
+            return Response(
+                {'username': 'Пользователь не найден!'},
+                status=status.HTTP_404_NOT_FOUND)
+        if data.get('confirmation_code') == user.confirmation_code:
+            token = RefreshToken.for_user(user).access_token
+            return Response({'token': str(token)},
+                            status=status.HTTP_201_CREATED)
+        return Response(
+            {'confirmation_code': 'Неверный код подтверждения!'},
+            status=status.HTTP_400_BAD_REQUEST)
+
+
+class APISignup(APIView):
+    """
+    Получить код подтверждения на переданный email. Права доступа: Доступно без
+    токена. Использовать имя 'me' в качестве username запрещено. Поля email и
+    username должны быть уникальными. Пример тела запроса:
+    {
+        "email": "string",
+        "username": "string"
+    }
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    @staticmethod
+    def send_email(data):
+        email = EmailMessage(
+            subject=data['email_subject'],
+            body=data['email_body'],
+            to=[data['to_email']]
         )
-        return Response("Confirmation code is sent to your email.")
+        email.send()
+
+    def post(self, request):
+        serializer = SignUpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        email_body = (
+            f'Доброе время суток, {user.username}.'
+            f'\nКод подтвержения для доступа к API: {user.confirmation_code}'
+        )
+        data = {
+            'email_body': email_body,
+            'to_email': user.email,
+            'email_subject': 'Код подтвержения для доступа к API!'
+        }
+        self.send_email(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
