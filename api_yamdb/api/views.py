@@ -1,16 +1,21 @@
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from reviews.models import Category, Comment, Genre, Review, Title
+from users.models import User
 from .mixins import ListCreateDestroyViewSet
 from .filters import TitleFilter
-from .permissions import IsAdminOrReadOnly, IsAuthorOrStaffOrReadOnly
+from .permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorOrStaffOrReadOnly
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
-                          TitleReadSerializer, TitleWriteSerializer)
+                          TitleReadSerializer, TitleWriteSerializer,
+                          UserSerializer)
 
 from django.core.mail import EmailMessage
 from rest_framework.views import APIView
@@ -93,4 +98,25 @@ class CommentViewSet(viewsets.ModelViewSet):
             review=review
         )
 
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ('username',)
+    lookup_field = 'username'
+    permission_classes = (IsAdmin,)
+
+    @action(methods=['get', 'patch'], detail=False,
+            permission_classes=[IsAuthenticated])
+    def me(self, request):
+        user = get_object_or_404(User, id=request.user.id)
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
