@@ -2,8 +2,8 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 
-from .views import CategoryViewSet, CommentViewSet, GenreViewSet
-from .views import ReviewViewSet, TitleViewSet
+from .views import (CategoryViewSet, CommentViewSet, GenreViewSet,
+                    ReviewViewSet, TitleViewSet, UserViewSet)
 from users.views import send_confirmation_code
 
 router = DefaultRouter()
@@ -32,6 +32,11 @@ router.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
     CommentViewSet,
     basename='comment'
+)
+router.register(
+    'users',
+    UserViewSet,
+    basename='user'
 )
 
 urlpatterns = [
