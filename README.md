@@ -41,6 +41,21 @@
 
 ```python manage.py migrate```
 
+### Загрузить данные из csv-файлов в проект:
+Строго соблюдать последовательность
+
+```python manage.py createsuperuser```
+
+```python manage.py load_users_data```
+
+```python manage.py load_all_data```
+
+!ДОПОЛНИТЕЛЬНО Для удаления и очистки БД:
+
+```python manage.py clear_users_data```
+
+```python manage.py clear_all_data```
+
 ### Запустить проект:
 
 ```python manage.py runserver```
