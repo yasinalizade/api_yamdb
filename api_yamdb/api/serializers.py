@@ -71,7 +71,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         read_only_fields = ('id', 'pub_date')
 
-    def validate_unique(self, data):
+    def validate(self, data):
         author = self.context['request'].user
         title = self.context['view'].kwargs.get('title_id')
         reviews = Review.objects.filter(title=title, author=author)
