@@ -1,7 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-# from django.contrib.auth.tokens import default_token_generator
 from django.db import models
-# from django.db.models.signals import post_save
 
 from .validators import validate_username
 
@@ -14,6 +12,7 @@ ROLE_CHOICES = [
     (ADMIN, ADMIN),
     (MODERATOR, MODERATOR),
 ]
+
 
 class User(AbstractUser):
     """Модель - пользователи."""
@@ -57,7 +56,6 @@ class User(AbstractUser):
         default=USER,
         blank=True
     )
-  
     confirmation_code = models.CharField(
         'Код подтверждения',
         max_length=255,

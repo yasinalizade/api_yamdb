@@ -1,5 +1,4 @@
 import datetime
-# from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -72,11 +71,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         read_only_fields = ('id', 'pub_date')
 
-    def validate(self, data):
+    def validate_unique(self, data):
         author = self.context['request'].user
         title = self.context['view'].kwargs.get('title_id')
         reviews = Review.objects.filter(title=title, author=author)
-        if self.context['request'].method == 'POST' and (len(reviews) > 1):
+        if self.context['request'].method == 'POST' and reviews.exists():
             raise serializers.ValidationError(
                 'Вы можете оставить только один отзыв на это произведение.'
             )
@@ -109,7 +108,7 @@ class NotAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'username', 'email', 'first_name','last_name', 'role', 'bio'
+            'username', 'email', 'first_name', 'last_name', 'role', 'bio'
         )
         read_only_fields = ('role',)
 

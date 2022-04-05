@@ -16,14 +16,14 @@ class IsAuthorOrStaffOrReadOnly(permissions.BasePermission):
                 or request.user.is_moderator
                 or request.user.is_admin)
 
-# Perrmission для User Viewset
-# class IsAdmin(permissions.BasePermission):
-#     def has_permission(self, request, view):
-#        return (
-#            request.user.is_authenticated
-#            and request.user.is_admin
-#            or request.user.is_superuser
-#        )
+
+class IsAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated
+            and request.user.is_admin
+            or request.user.is_superuser
+        )
 
 
 class AdminOnly(permissions.BasePermission):
@@ -49,7 +49,7 @@ class IsAdminUserOrReadOnly(permissions.BasePermission):
         return False
 
 
-class AdminModeratorAuthorPermission(permissions.BasePermission):
+class IsAdminModeratorAuthorPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
@@ -62,10 +62,4 @@ class AdminModeratorAuthorPermission(permissions.BasePermission):
             or obj.author == request.user
             or request.user.is_moderator
             or request.user.is_admin
-
-# class IsAdmin(permissions.BasePermission):
-#     def has_permission(self, request, view):
-#         return (
-#             request.user.is_authenticated
-#             and request.user.is_admin
-#         )
+        )

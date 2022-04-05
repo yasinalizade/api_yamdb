@@ -16,8 +16,8 @@ from api.serializers import (
 
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -61,6 +61,8 @@ class APIGetToken(APIView):
         "confirmation_code": "string"
     }
     """
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request):
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
