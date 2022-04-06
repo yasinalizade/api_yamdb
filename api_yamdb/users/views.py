@@ -1,23 +1,17 @@
-from rest_framework import viewsets
-from rest_framework.filters import SearchFilter
-
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
-from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
-from api.permissions import AdminOnly
-from reviews.models import User
-
-from api.serializers import (
-    GetTokenSerializer,
-    NotAdminSerializer,
-    SignUpSerializer,
-    UsersSerializer
-)
-
-from rest_framework import permissions, status
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from api.permissions import AdminOnly
+from api.serializers import GetTokenSerializer, SignUpSerializer, UsersSerializer
+from reviews.models import User
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -28,28 +22,65 @@ class UsersViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
 
-    @action(
-        methods=['GET', 'PATCH'],
-        detail=False,
-        permission_classes=(IsAuthenticated,),
-        url_path='me')
+    @action(methods=['GET', 'PATCH'], detail=False,
+            permission_classes=(IsAuthenticated,), url_path='me')
     def get_current_user_info(self, request):
-        serializer = UsersSerializer(request.user)
-        if request.method == 'PATCH':
-            if request.user.is_admin:
-                serializer = UsersSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
-            else:
-                serializer = NotAdminSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        user = get_object_or_404(User, id=request.user.id)
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.data)
+        serializer = UsersSerializer(
+                request.user,
+                data=request.data,
+                partial=True, 
+                context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class APISignup(APIView):
+    """
+    Получить код подтверждения на переданный email. Права доступа: Доступно без
+    токена. Использовать имя 'me' в качестве username запрещено. Поля email и
+    username должны быть уникальными. Пример тела запроса:
+    {
+        "email": "string",
+        "username": "string"
+    }
+    """
+    permission_classes = (permissions.AllowAny,)
+
+    @staticmethod
+    def send_email(data):
+        email = EmailMessage(
+            subject=data['email_subject'],
+            body=data['email_body'],
+            to=[data['to_email']]
+        )
+        email.send()
+
+    def post(self, request):
+        serializer = SignUpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data.get('email')
+        username = serializer.validated_data.get('username')
+        user = serializer.save()
+        token = default_token_generator.make_token(user)
+        User.objects.filter(email=email, username=username).update(
+            confirmation_code=token
+        )
+        email_body = (
+            f'Доброе время суток, {user.username}.'
+            f'\nКод подтвержения для доступа к API: {token}'
+        )
+        data = {
+            'email_body': email_body,
+            'to_email': user.email,
+            'email_subject': 'Код подтвержения для доступа к API!'
+        }
+        self.send_email(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class APIGetToken(APIView):
@@ -80,41 +111,3 @@ class APIGetToken(APIView):
         return Response(
             {'confirmation_code': 'Неверный код подтверждения!'},
             status=status.HTTP_400_BAD_REQUEST)
-
-
-class APISignup(APIView):
-    """
-    Получить код подтверждения на переданный email. Права доступа: Доступно без
-    токена. Использовать имя 'me' в качестве username запрещено. Поля email и
-    username должны быть уникальными. Пример тела запроса:
-    {
-        "email": "string",
-        "username": "string"
-    }
-    """
-    permission_classes = (permissions.AllowAny,)
-
-    @staticmethod
-    def send_email(data):
-        email = EmailMessage(
-            subject=data['email_subject'],
-            body=data['email_body'],
-            to=[data['to_email']]
-        )
-        email.send()
-
-    def post(self, request):
-        serializer = SignUpSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        email_body = (
-            f'Доброе время суток, {user.username}.'
-            f'\nКод подтвержения для доступа к API: {user.confirmation_code}'
-        )
-        data = {
-            'email_body': email_body,
-            'to_email': user.email,
-            'email_subject': 'Код подтвержения для доступа к API!'
-        }
-        self.send_email(data)
-        return Response(serializer.data, status=status.HTTP_200_OK)

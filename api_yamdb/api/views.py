@@ -1,32 +1,22 @@
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework import viewsets
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
-from .mixins import ListCreateDestroyViewSet
 from .filters import TitleFilter
-from .permissions import (IsAdmin, IsAdminOrReadOnly,
+from .mixins import ListCreateDestroyViewSet
+from .permissions import (IsAdminOrReadOnly,
                           IsAdminModeratorAuthorPermission)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
-                          TitleReadSerializer, TitleWriteSerializer,
-                          NotAdminSerializer, UsersSerializer)
+                          TitleReadSerializer, TitleWriteSerializer)
 
-from reviews.models import Category, Comment, Genre, Review, Title
-from users.models import User
+from reviews.models import Category, Genre, Review, Title
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
-    queryset = Category.objects.all().order_by('id')
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
@@ -35,7 +25,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
 
 
 class GenreViewSet(ListCreateDestroyViewSet):
-    queryset = Genre.objects.all().order_by('id')
+    queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
@@ -63,10 +53,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminModeratorAuthorPermission,)
 
     def get_queryset(self, *args, **kwargs):
-        queryset = Review.objects.all().order_by('id')
         title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, pk=title_id)
-        return queryset.filter(title=title)
+        return title.reviews.all()
 
     def perform_create(self, serializer, *args, **kwargs):
         title_id = self.kwargs.get("title_id")
@@ -82,12 +71,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminModeratorAuthorPermission,)
 
     def get_queryset(self, *args, **kwargs):
-        queryset = Comment.objects.all().order_by('id')
-        title_id = self.kwargs.get("title_id")
         review_id = self.kwargs.get("review_id")
-        title = get_object_or_404(Title, pk=title_id)
         review = get_object_or_404(Review, pk=review_id)
-        return queryset.filter(review__title=title, review=review)
+        return review.comments.all()
 
     def perform_create(self, serializer, *args, **kwargs):
         review_id = self.kwargs.get("review_id")
@@ -96,33 +82,3 @@ class CommentViewSet(viewsets.ModelViewSet):
             author=self.request.user,
             review=review
         )
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UsersSerializer
-    filter_backends = (SearchFilter,)
-    search_fields = ('username',)
-    lookup_field = 'username'
-    permission_classes = (IsAdmin,)
-
-    @action(methods=['get', 'patch'], detail=False,
-            permission_classes=[IsAuthenticated])
-    def me(self, request):
-        user = get_object_or_404(User, id=request.user.id)
-        if request.method == 'GET':
-            serializer = self.get_serializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        serializer = self.get_serializer(user, data=request.data, partial=True)
-        if request.user.is_admin:
-            serializer = UsersSerializer(request.user,
-                                         data=request.data,
-                                         partial=True)
-        else:
-            serializer = NotAdminSerializer(request.user,
-                                            data=request.data,
-                                            partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

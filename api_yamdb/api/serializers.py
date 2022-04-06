@@ -1,4 +1,4 @@
-import datetime
+from django.utils import timezone
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -14,13 +14,13 @@ class SignUpSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('name', 'slug')
+        exclude = ('id',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        exclude = ('id',)
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -40,7 +40,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
                   'genre', 'category')
 
     def validate_year(self, data):
-        current_year = datetime.date.today().year
+        current_year = timezone.now().year
         if data > current_year:
             raise serializers.ValidationError(
                 'Год выпуска не может быть больше текущего.'
@@ -102,15 +102,13 @@ class UsersSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name',
             'last_name', 'role', 'bio'
         )
-
-
-class NotAdminSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'username', 'email', 'first_name', 'last_name', 'role', 'bio'
-        )
-        read_only_fields = ('role',)
+    
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request", None)
+        if request.user.is_admin is False:
+            fields["role"].read_only = True
+        return fields
 
 
 class GetTokenSerializer(serializers.ModelSerializer):
