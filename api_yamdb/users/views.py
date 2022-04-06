@@ -10,7 +10,8 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.permissions import AdminOnly
-from api.serializers import GetTokenSerializer, SignUpSerializer, UsersSerializer
+from api.serializers import (GetTokenSerializer, SignUpSerializer,
+                             UsersSerializer)
 from reviews.models import User
 
 
@@ -29,11 +30,10 @@ class UsersViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             serializer = self.get_serializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        serializer = UsersSerializer(
-                request.user,
-                data=request.data,
-                partial=True, 
-                context={'request': request})
+        serializer = UsersSerializer(request.user,
+                                     data=request.data,
+                                     partial=True,
+                                     context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
