@@ -102,7 +102,7 @@ class UsersSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name',
             'last_name', 'role', 'bio'
         )
-    
+
     def get_fields(self):
         fields = super().get_fields()
         request = self.context.get("request", None)

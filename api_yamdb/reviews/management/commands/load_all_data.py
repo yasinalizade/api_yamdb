@@ -47,7 +47,6 @@ class Command(BaseCommand):
             title = Title.objects.get(id=row['title_id'])
             title.genre.add(row['genre_id'])
             title.save()
-            
 
         for row in DictReader(open(
                 './static/data/review.csv', encoding='utf-8')):
