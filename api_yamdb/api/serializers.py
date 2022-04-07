@@ -105,8 +105,8 @@ class UsersSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        request = self.context.get("request", None)
-        if request.user.is_admin is False:
+        request = self.context.get("request")
+        if request and not request.user.is_admin:
             fields["role"].read_only = True
         return fields
 

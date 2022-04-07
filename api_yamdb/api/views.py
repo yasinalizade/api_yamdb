@@ -11,7 +11,6 @@ from .permissions import (IsAdminOrReadOnly,
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer,
                           TitleReadSerializer, TitleWriteSerializer)
-
 from reviews.models import Category, Genre, Review, Title
 
 
